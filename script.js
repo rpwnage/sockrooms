@@ -1,6 +1,8 @@
 import * as THREE from "three";
 const socket = io(import.meta.env.VITE_WS_URL, { transports: ["websocket"] });
-
+const canvas = document.getElementById("webgl-canvas");
+canvas.width = window.innerWidth; // Set width to full window width
+canvas.height = window.innerHeight; // Set height to full window height
 // Scene, Camera, Renderer setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -9,7 +11,9 @@ const camera = new THREE.PerspectiveCamera(
 	0.1,
 	1000
 );
+
 const renderer = new THREE.WebGLRenderer({
+	antialias: true,
 	canvas: document.getElementById("webgl-canvas"),
 });
 
@@ -51,16 +55,18 @@ function createUserCube(userId, position) {
 
 	const usernameMaterial = new THREE.SpriteMaterial({ map: usernameTexture });
 	const usernameSprite = new THREE.Sprite(usernameMaterial);
-	usernameSprite.position.set(position.x, position.y + 1.5, position.z); // Position above the cube
+	usernameSprite.position.set(position.x, position.y + 0.5, position.z); // Position above the cube
 
-	// Add username sprite to the scene along with the cube
-	scene.add(otherCube, usernameSprite);
+	if (usernameSprite) {
+		scene.add(usernameSprite);
+	}
+
 	otherUsers[userId] = { cube: otherCube, sprite: usernameSprite }; // Store both cube and sprite
 }
 
 // Update user position based on keyboard input
 document.addEventListener("keydown", (event) => {
-	const speed = 1;
+	const speed = 0.1;
 	switch (event.key) {
 		case "w":
 			myPosition.z += speed;
@@ -96,10 +102,10 @@ socket.on("user-data", (users) => {
 			if (!otherUsers[userId]) {
 				createUserCube(userId, users[userId].position);
 			} else {
-				otherUsers[userId].position.set(
-					users[userId].position.x,
-					users[userId].position.y,
-					users[userId].position.z
+				otherUsers[userId].cube.position.set(
+					users[userId].cube.position.x,
+					users[userId].cube.position.y,
+					users[userId].cube.position.z
 				);
 			}
 		}
@@ -114,19 +120,27 @@ socket.on("new-user", (newUser) => {
 
 // Handle updates of other user positions
 socket.on("user-updates", (users) => {
-	// Update positions of other user cubes based on received data
+	// Update positions of other user cubes and username sprites
 	for (const userId in users) {
 		if (userId !== myUserId) {
-			// Ensure user exists before accessing their cube
+			// Ensure user exists in otherUsers before accessing properties
 			if (otherUsers[userId]) {
-				otherUsers[userId].position.set(
+				otherUsers[userId].cube.position.set(
 					users[userId].position.x,
 					users[userId].position.y,
 					users[userId].position.z
 				);
+
+				// Update username sprite position if it exists
+				if (otherUsers[userId].sprite) {
+					otherUsers[userId].sprite.position.set(
+						users[userId].position.x,
+						users[userId].position.y + 0.5,
+						users[userId].position.z
+					); // Keep above the cube
+				}
 			} else {
 				console.warn(`Received update for unknown user: ${userId}`);
-				myCube.position.set(myPosition.x, myPosition.y, myPosition.z);
 			}
 		}
 	}
