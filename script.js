@@ -11,7 +11,7 @@ const setUsernameButton = document.getElementById("set-username-btn");
 const chatWindow = document.getElementById("chat-window");
 const chatMessages = document.getElementById("chat-messages");
 const chatInput = document.getElementById("chat-input");
-
+$(".chat-window").draggable({ handle: ".chat-title", scroll: false });
 setUsernameButton.addEventListener("click", () => {
 	const username = usernameInput.value.trim(); // Trim leading/trailing spaces
 	if (username) {
@@ -116,9 +116,17 @@ setUsernameButton.addEventListener("click", () => {
 			const div = document.createElement("div");
 			if (playerIsAuthor) div.className = "sent-chat-message";
 			else div.className = "received-chat-message";
-			div.innerHTML = message;
+			div.textContent = message;
 			chatMessages.appendChild(div);
-			chatMessages.scrollTop = chatWindow.scrollHeight;
+			chatMessages.scrollTop = chatMessages.scrollHeight;
+		}
+
+		function addJoinMessage(username) {
+			const div = document.createElement("div");
+			div.className = "user-joined-message";
+			div.textContent = `--- ${username} joined ---`;
+			chatMessages.appendChild(div);
+			chatMessages.scrollTop = chatMessages.scrollHeight;
 		}
 
 		chatInput.addEventListener("focus", () => {
@@ -159,10 +167,10 @@ setUsernameButton.addEventListener("click", () => {
 			if (!isMovementPaused) {
 				switch (event.key) {
 					case "w":
-						myPosition.z += speed;
+						myPosition.z -= speed;
 						break;
 					case "s":
-						myPosition.z -= speed;
+						myPosition.z += speed;
 						break;
 					case "a":
 						myPosition.x -= speed;
@@ -220,6 +228,7 @@ setUsernameButton.addEventListener("click", () => {
 		socket.on("new-user", (newUser) => {
 			// Create and display the new user's cube
 			createUserCube(newUser, newUser.position);
+			addJoinMessage(newUser.username);
 		});
 
 		// Handle updates of other user positions

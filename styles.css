@@ -29,6 +29,10 @@ body {
     padding-right: 0px;
 } 
 
+.chat-title {
+    cursor: grab;
+}
+
 .chat-window-background {
     background-color: grey;
     height: 100%;
@@ -97,4 +101,10 @@ body {
     padding: 5px;
     align-self: flex-start;
     margin-left: 10px;
+}
+
+.user-joined-message {
+    font-size: 0.6rem;
+    text-align: center;
+    padding: 5px;
 }
