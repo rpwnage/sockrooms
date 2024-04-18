@@ -39,6 +39,23 @@ function createUserCube(userId, position) {
 	otherCube.position.set(position.x, position.y, position.z);
 	otherUsers[userId] = otherCube;
 	scene.add(otherCube);
+	// Create a text sprite for the username
+	const usernameCanvas = document.createElement("canvas");
+	const usernameContext = usernameCanvas.getContext("2d");
+	usernameContext.font = "16px Arial";
+	usernameContext.fillStyle = "white";
+	usernameContext.fillText(userId, 10, 20); // Adjust position as needed
+
+	const usernameTexture = new THREE.Texture(usernameCanvas);
+	usernameTexture.needsUpdate = true;
+
+	const usernameMaterial = new THREE.SpriteMaterial({ map: usernameTexture });
+	const usernameSprite = new THREE.Sprite(usernameMaterial);
+	usernameSprite.position.set(position.x, position.y + 1.5, position.z); // Position above the cube
+
+	// Add username sprite to the scene along with the cube
+	scene.add(otherCube, usernameSprite);
+	otherUsers[userId] = { cube: otherCube, sprite: usernameSprite }; // Store both cube and sprite
 }
 
 // Update user position based on keyboard input
@@ -118,7 +135,8 @@ socket.on("user-updates", (users) => {
 // Handle user disconnection
 socket.on("user-disconnected", (disconnectedUserId) => {
 	if (otherUsers[disconnectedUserId]) {
-		scene.remove(otherUsers[disconnectedUserId]);
+		scene.remove(otherUsers[disconnectedUserId].cube);
+		scene.remove(otherUsers[disconnectedUserId].sprite);
 		delete otherUsers[disconnectedUserId];
 	}
 });
