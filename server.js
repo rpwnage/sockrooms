@@ -5,21 +5,44 @@ const io = require("socket.io")(http);
 
 // Define user information
 const users = {};
+const defaultUsername = "Anon";
 
 app.use(express.static("public"));
 
 io.on("connection", (socket) => {
-	console.log("A user connected:", socket.id);
+	console.log(`[${socket.id}] User connected`);
 
-	// Assign a unique ID to the user
 	users[socket.id] = {
 		id: socket.id,
+		username: defaultUsername, // give the user a default username
 		position: {
 			x: 0,
 			y: 0,
 			z: 0,
 		},
 	};
+
+	function setUsername(username) {
+		if (username) {
+			// Validate username (optional, add checks for length, allowed characters, etc.)
+			users[socket.id].username = username;
+			console.log(`[${socket.id}] Username set to ${username}`);
+		}
+	}
+
+	const username = socket.handshake.query.username;
+	if (username) {
+		setUsername(username); // Set username if provided
+	} else {
+		console.log(
+			`[${socket.id}] Username has not been provided, defaulting to '${defaultUsername}'`
+		);
+	}
+
+	// Listen for the "set-username" event from the client
+	socket.on("set-username", (username) => {
+		setUsername(username); // Call setUsername function with received username
+	});
 
 	// Send the user their ID and position data (including their own)
 	socket.emit("user-data", users);
@@ -40,7 +63,7 @@ io.on("connection", (socket) => {
 
 	// Handle user disconnection
 	socket.on("disconnect", () => {
-		console.log("A user disconnected:", socket.id);
+		console.log(`[${socket.id}] User disconnected`);
 
 		// Remove the disconnected user from the list
 		delete users[socket.id];
