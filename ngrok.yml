@@ -1,0 +1,11 @@
+tunnels:
+    frontend-client:
+        addr: 5173
+        proto: http
+        hostname: example.ngrok.com
+        host_header: first-app.example.ngrok.com
+    server:
+        addr: 3000
+        proto: http
+        hostname: example.ngrok.com
+        host_header: second-app.example.ngrok.com
