@@ -136,9 +136,13 @@ setUsernameButton.addEventListener("click", () => {
 					if (isChatOpen) {
 						// Clear the chat window
 						let message = chatInput.value.trim();
-						chatInput.value = "";
-						addChatMessage(message, true);
-						socket.emit("chat-message", message);
+						if (message[0] == "/") {
+							// handle the input as a command. Still gotta come up with a system for this. - TODO
+						} else {
+							chatInput.value = "";
+							addChatMessage(message, true);
+							socket.emit("chat-message", message);
+						}
 					}
 			}
 		});
@@ -151,7 +155,7 @@ setUsernameButton.addEventListener("click", () => {
 
 		// Update user position based on keyboard input
 		document.addEventListener("keydown", (event) => {
-			const speed = 0.1;
+			const speed = 1;
 			if (!isMovementPaused) {
 				switch (event.key) {
 					case "w":
@@ -166,10 +170,17 @@ setUsernameButton.addEventListener("click", () => {
 					case "d":
 						myPosition.x += speed;
 						break;
+					case " ":
+						myPosition.y += speed;
+						break;
+					case "Shift":
+						myPosition.y -= speed;
+						break;
 					case "Enter":
 						console.log(chatWindow.style.display);
 						chatWindow.style.display = "none";
 						toggleChat();
+						chatInput.focus();
 						break;
 				}
 			}

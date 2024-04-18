@@ -1,6 +1,7 @@
 body {
     background-color: black;
     height: 100%;
+    overflow: hidden;
     margin: 0 auto;
 }
 
@@ -8,6 +9,12 @@ body {
     position: absolute;
     width: 15%;
     bottom: 0px;
+    resize: both;
+    min-width: 250px;
+    min-height: 250px;
+    max-width: 97%;
+    max-height: 93%;
+    overflow: hidden;
     left: 0px;
     height: 40%;
     border-radius: 15px;
@@ -75,10 +82,12 @@ body {
     font-size: 0.85rem;
     border-radius: 10px 10px 0px 10px;
     border: none;
+    margin-right: 7px;
 }
 
 .received-chat-message {
     margin-bottom: 5px;
+    margin-left: 7px;
     max-width: 70%;
     font-size: 0.85rem;
     border-radius: 10px 10px 10px 0px;
