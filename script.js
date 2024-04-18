@@ -8,6 +8,9 @@ canvas.height = window.innerHeight; // Set height to full window height
 
 const usernameInput = document.getElementById("username-input");
 const setUsernameButton = document.getElementById("set-username-btn");
+const chatWindow = document.getElementById("chat-window");
+const chatMessages = document.getElementById("chat-messages");
+const chatInput = document.getElementById("chat-input");
 
 setUsernameButton.addEventListener("click", () => {
 	const username = usernameInput.value.trim(); // Trim leading/trailing spaces
@@ -16,6 +19,19 @@ setUsernameButton.addEventListener("click", () => {
 		usernameInput.remove();
 		setUsernameButton.remove();
 		canvas.style.display = "";
+
+		let isChatOpen = false;
+		let isMovementPaused = false;
+
+		function toggleChat() {
+			if (isChatOpen) {
+				chatWindow.style.display = "none";
+				isChatOpen = false;
+			} else {
+				chatWindow.style.display = "";
+				isChatOpen = true;
+			}
+		}
 
 		// Connect to the server with the chosen username
 		const socket = io(
@@ -96,22 +112,66 @@ setUsernameButton.addEventListener("click", () => {
 			otherUsers[userId] = { cube: otherCube, sprite: usernameSprite }; // Store both cube and sprite
 		}
 
+		function addChatMessage(message, playerIsAuthor = false) {
+			const div = document.createElement("div");
+			if (playerIsAuthor) div.className = "sent-chat-message";
+			else div.className = "received-chat-message";
+			div.innerHTML = message;
+			chatMessages.appendChild(div);
+			chatMessages.scrollTop = chatWindow.scrollHeight;
+		}
+
+		chatInput.addEventListener("focus", () => {
+			isMovementPaused = true;
+		});
+
+		chatInput.addEventListener("focusout", () => {
+			isMovementPaused = false;
+		});
+
+		chatInput.addEventListener("keydown", (event) => {
+			console.log(event.key);
+			switch (event.key) {
+				case "Enter":
+					if (isChatOpen) {
+						// Clear the chat window
+						let message = chatInput.value.trim();
+						chatInput.value = "";
+						addChatMessage(message, true);
+						socket.emit("chat-message", message);
+					}
+			}
+		});
+
+		socket.on("chat-message", (message) => {
+			if (isChatOpen) {
+				addChatMessage(message, false);
+			}
+		});
+
 		// Update user position based on keyboard input
 		document.addEventListener("keydown", (event) => {
 			const speed = 0.1;
-			switch (event.key) {
-				case "w":
-					myPosition.z += speed;
-					break;
-				case "s":
-					myPosition.z -= speed;
-					break;
-				case "a":
-					myPosition.x -= speed;
-					break;
-				case "d":
-					myPosition.x += speed;
-					break;
+			if (!isMovementPaused) {
+				switch (event.key) {
+					case "w":
+						myPosition.z += speed;
+						break;
+					case "s":
+						myPosition.z -= speed;
+						break;
+					case "a":
+						myPosition.x -= speed;
+						break;
+					case "d":
+						myPosition.x += speed;
+						break;
+					case "Enter":
+						console.log(chatWindow.style.display);
+						chatWindow.style.display = "none";
+						toggleChat();
+						break;
+				}
 			}
 
 			// Send updated position to the server

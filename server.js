@@ -61,6 +61,11 @@ io.on("connection", (socket) => {
 		socket.broadcast.emit("user-updates", users);
 	});
 
+	socket.on("chat-message", (message) => {
+		console.log(`[${socket.id}] Message: ${message}`);
+		socket.broadcast.emit("chat-message", message);
+	});
+
 	// Handle user disconnection
 	socket.on("disconnect", () => {
 		console.log(`[${socket.id}] User disconnected`);

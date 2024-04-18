@@ -6,17 +6,21 @@
 		<title>Multiplayer Cube Game</title>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
 		<script type="module" src="script.js"></script>
-		<link rel="stylesheet" src="styles.css" />
-		<style>
-			body {
-				background-color: DarkGray;
-				height: 100%;
-				margin: 0 auto;
-			}
-		</style>
+		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
 		<canvas id="webgl-canvas" style="display: none"></canvas>
+		<div id="chat-window" class="chat-window">
+			<div class="chat-window-background"></div>
+			<h4>Global Chat</h4>
+			<div id="chat-messages" class="chat-messages"></div>
+			<input
+				type="text"
+				id="chat-input"
+				class="chat-input"
+				placeholder="Message..."
+			/>
+		</div>
 		<div id="login-modal">
 			<input
 				type="text"
