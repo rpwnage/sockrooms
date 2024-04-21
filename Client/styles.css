@@ -22,12 +22,18 @@ body {
     color: wheat;
 }
 
+div::-webkit-scrollbar-corner {
+    display: none; /* Hide the resizer element */
+  }
+  
+
 .chat-window {
     position: absolute;
+    overflow: hidden;
     width: 15%;
     bottom: 0px;
     resize: both;
-    min-width: 250px;
+    min-width: 280px;
     min-height: 250px;
     max-width: 97%;
     max-height: 93%;
@@ -35,7 +41,6 @@ body {
     height: 40%;
     border-radius: 15px;
     border: transparent;
-    padding: 7.5px;
     margin: 20px;
     z-index: 100;
     color: rgb(255, 255, 255);
@@ -55,8 +60,8 @@ body {
     right: 0px;
     position: relative;
     cursor: pointer;
-    margin: 15px;
-    margin-top: 20px;
+    margin: 20px;
+    float: right;
 }
 
 .chat-window-background {
@@ -100,6 +105,7 @@ body {
     flex-direction: column;
     height: 75%;
     overflow: scroll;
+    width: 100%;
 }
 
 .chat-message {
@@ -133,7 +139,7 @@ body {
     margin-left: 10px;
 }
 
-.user-joined-message {
+.chat-info-message {
     font-size: 0.6rem;
     text-align: center;
     padding: 5px;

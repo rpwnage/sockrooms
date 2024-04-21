@@ -31,7 +31,8 @@ setUsernameButton.addEventListener("click", () => {
 		let isChatMenuDropdownOpen = false;
 		let isMovementPaused = false;
 
-		let developmentMode = true;
+		let developmentMode =
+			import.meta.env.VITE_WS_URL == "Dev" ? true : false;
 
 		function main() {
 			function toggleChat() {
@@ -127,7 +128,6 @@ setUsernameButton.addEventListener("click", () => {
 				}); // Random color
 				const otherCube = new THREE.Mesh(geometry, otherMaterial);
 				otherCube.position.set(position.x, position.y, position.z);
-				otherUsers[userId] = otherCube;
 				scene.add(otherCube);
 				// Create a text sprite for the username
 				const usernameCanvas = document.createElement("canvas");
@@ -154,6 +154,7 @@ setUsernameButton.addEventListener("click", () => {
 				}
 
 				otherUsers[userId] = {
+					user: userElement,
 					cube: otherCube,
 					sprite: usernameSprite,
 				}; // Store both cube and sprite
@@ -168,10 +169,10 @@ setUsernameButton.addEventListener("click", () => {
 				chatMessages.scrollTop = chatMessages.scrollHeight;
 			}
 
-			function addJoinMessage(username) {
+			function addChatInfoMessage(message) {
 				const div = document.createElement("div");
-				div.className = "user-joined-message";
-				div.textContent = `--- ${username} joined ---`;
+				div.className = "chat-info-message";
+				div.textContent = `--- ${message} ---`;
 				chatMessages.appendChild(div);
 				chatMessages.scrollTop = chatMessages.scrollHeight;
 			}
@@ -295,7 +296,7 @@ setUsernameButton.addEventListener("click", () => {
 			socket.on("new-user", (newUser) => {
 				// Create and display the new user's cube
 				createUserCube(newUser, newUser.position);
-				addJoinMessage(newUser.username);
+				addChatInfoMessage(`${newUser.username} has joined`);
 			});
 
 			// Handle updates of other user positions
@@ -330,6 +331,11 @@ setUsernameButton.addEventListener("click", () => {
 
 			// Handle user disconnection
 			socket.on("user-disconnected", (disconnectedUserId) => {
+				console.log(otherUsers[disconnectedUserId]);
+				addChatInfoMessage(
+					`${otherUsers[disconnectedUserId].user.username} has disconnected`
+				);
+
 				if (otherUsers[disconnectedUserId]) {
 					scene.remove(otherUsers[disconnectedUserId].cube);
 					scene.remove(otherUsers[disconnectedUserId].sprite);
