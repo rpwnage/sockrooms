@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import initializeChat from "./chat";
+import ui from "./ui";
 
 // DOM Elements
 const canvas = document.getElementById("webgl-canvas");
@@ -9,14 +11,6 @@ canvas.height = window.innerHeight; // Set height to full window height
 
 const usernameInput = document.getElementById("username-input");
 const setUsernameButton = document.getElementById("set-username-btn");
-const chatWindow = document.getElementById("chat-window");
-const chatMessages = document.getElementById("chat-messages");
-const chatInput = document.getElementById("chat-input");
-const chatMenuButton = document.getElementById("chat-menu-button");
-const chatMenu = document.getElementById("chat-menu");
-const chatMenuDropDown = document.getElementById("chat-menu-dropdown");
-const settingsButton = document.getElementById("settings-button");
-const coordinatesOverlay = document.getElementById("coordinates-overlay");
 
 $(".chat-window").draggable({ handle: ".chat-title", scroll: false });
 setUsernameButton.addEventListener("click", () => {
@@ -27,47 +21,12 @@ setUsernameButton.addEventListener("click", () => {
 		setUsernameButton.remove();
 		canvas.style.display = "";
 
-		let isChatOpen = false;
-		let isChatMenuDropdownOpen = false;
 		let isMovementPaused = false;
 
 		let developmentMode =
 			import.meta.env.VITE_WS_URL == "Dev" ? true : false;
 
 		function main() {
-			function toggleChat() {
-				if (isChatOpen) {
-					chatWindow.style.display = "none";
-					isChatOpen = false;
-				} else {
-					chatWindow.style.display = "";
-					chatInput.focus();
-					isChatOpen = true;
-				}
-			}
-
-			function toggleChatMenuDropdown() {
-				if (isChatMenuDropdownOpen) {
-					chatMenuDropDown.style.display = "none";
-					isChatMenuDropdownOpen = false;
-				} else {
-					chatMenuDropDown.style.display = "";
-					isChatMenuDropdownOpen = true;
-
-					document.addEventListener("click", (event) => {
-						const withinBoundaries = event
-							.composedPath()
-							.includes(chatMenu);
-
-						if (isChatMenuDropdownOpen) {
-							if (!withinBoundaries) {
-								toggleChatMenuDropdown();
-							}
-						}
-					});
-				}
-			}
-
 			// Set the username
 			socket.emit("set-username", username);
 
@@ -160,73 +119,12 @@ setUsernameButton.addEventListener("click", () => {
 				}; // Store both cube and sprite
 			}
 
-			function addChatMessage(message, playerIsAuthor = false) {
-				const div = document.createElement("div");
-				if (playerIsAuthor) div.className = "chat-message sent-message";
-				else div.className = "chat-message received-message";
-				div.textContent = message;
-				chatMessages.appendChild(div);
-				chatMessages.scrollTop = chatMessages.scrollHeight;
-			}
-
-			function addChatInfoMessage(message) {
-				const div = document.createElement("div");
-				div.className = "chat-info-message";
-				div.textContent = `--- ${message} ---`;
-				chatMessages.appendChild(div);
-				chatMessages.scrollTop = chatMessages.scrollHeight;
-			}
-
-			chatInput.addEventListener("focus", () => {
-				isMovementPaused = true;
-			});
-
-			chatInput.addEventListener("focusout", () => {
-				isMovementPaused = false;
-			});
-
-			chatInput.addEventListener("keydown", (event) => {
-				console.log(event.key);
-				switch (event.key) {
-					case "Enter":
-						if (isChatOpen) {
-							// Clear the chat window
-							let message = chatInput.value.trim();
-							if (message[0] == "/") {
-								// handle the input as a command. Still gotta come up with a system for this. - TODO
-							} else {
-								if (message.replace(" ", "").length > 0) {
-									chatInput.value = "";
-									addChatMessage(message, true);
-									socket.emit("chat-message", message);
-								}
-							}
-						}
-				}
-			});
-
-			chatMenuButton.addEventListener("click", function () {
-				toggleChatMenuDropdown();
-			});
-
-			// Dropdown Menu items
-
-			settingsButton.addEventListener("click", function () {});
-
-			socket.on("chat-message", (message) => {
-				if (isChatOpen) {
-					addChatMessage(message, false);
-				}
-			});
-
-			function updateCoordinates() {
-				coordinatesOverlay.innerText = `(${myPosition.x}, ${myPosition.y}, ${myPosition.z})`;
-			}
+			initializeChat(socket);
 
 			// Update user position based on keyboard input
 			document.addEventListener("keydown", (event) => {
 				const speed = 1;
-				if (!isMovementPaused) {
+				if (!window.chatInputFocused) {
 					switch (event.key) {
 						case "w":
 							myPosition.z -= speed;
@@ -252,9 +150,6 @@ setUsernameButton.addEventListener("click", () => {
 							myPosition.y -= speed;
 							controls.target.y -= speed; // Move target down
 							break;
-						case "Enter":
-							toggleChat();
-							break;
 					}
 				}
 
@@ -273,7 +168,6 @@ setUsernameButton.addEventListener("click", () => {
 
 				// Create and update other user cubes based on received data
 				for (const userId in users) {
-					console.log(users[userId]);
 					if (userId !== myUserId) {
 						// Check if user already exists before creating a new cube
 						if (!otherUsers[userId]) {
@@ -331,7 +225,6 @@ setUsernameButton.addEventListener("click", () => {
 
 			// Handle user disconnection
 			socket.on("user-disconnected", (disconnectedUserId) => {
-				console.log(otherUsers[disconnectedUserId]);
 				addChatInfoMessage(
 					`${otherUsers[disconnectedUserId].user.username} has disconnected`
 				);
@@ -353,7 +246,7 @@ setUsernameButton.addEventListener("click", () => {
 					desiredDistance
 				);
 
-				updateCoordinates();
+				ui.updateCoordinates(myPosition);
 				renderer.render(scene, camera);
 			}
 
