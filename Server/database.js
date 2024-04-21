@@ -14,7 +14,7 @@ function connectDB() {
 				reject(err);
 			} else {
 				console.log("[DB] Connected to database successfully.");
-				createTableIfNotExists() // Check and create table if needed
+				createUsersTableIfNotExists() // Check and create table if needed
 					.then(() => resolve())
 					.catch((err) => reject(err));
 			}
@@ -22,23 +22,22 @@ function connectDB() {
 	});
 }
 
-function createTableIfNotExists() {
+function createUsersTableIfNotExists() {
 	return new Promise((resolve, reject) => {
 		db.run(
-			`CREATE TABLE IF NOT EXISTS user_movement (
+			`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL,
-        timestamp INTEGER NOT NULL,
-        x REAL NOT NULL,
-        y REAL NOT NULL,
-        z REAL NOT NULL
-      )`,
+        username TEXT NOT NULL,
+        position_x REAL,
+        position_y REAL,
+        position_z REAL
+      );`,
 			(err) => {
 				if (err) {
 					reject(err);
 				} else {
 					console.log(
-						'[DB] Table "user_movement" created (if it did not exist).'
+						"[DB] Table 'users' created (if it did not exist)."
 					);
 					resolve();
 				}
@@ -47,8 +46,8 @@ function createTableIfNotExists() {
 	});
 }
 
-// Function to log user movement data into the database
-function logUserMovement(userId, position) {
+// Function to update user position (assuming it's called updateUserPosition)
+function updateUserPosition(userId, position) {
 	return new Promise((resolve, reject) => {
 		if (!db) {
 			return reject(
@@ -56,33 +55,21 @@ function logUserMovement(userId, position) {
 			);
 		}
 
-		// Replace with your actual column names (ensure prepared statements)
 		const stmt = db.prepare(
-			"INSERT INTO user_movement (user_id, timestamp, x, y, z) VALUES (?, ?, ?, ?, ?)"
+			"UPDATE users SET position_x = ?, position_y = ?, position_z = ? WHERE id = ?"
 		);
-		const timestamp = Date.now(); // Get current timestamp
-
-		stmt.run(
-			userId,
-			timestamp,
-			position.x,
-			position.y,
-			position.z,
-			(err) => {
-				if (err) {
-					reject(err);
-				} else {
-					console.log(
-						`[DB] User movement for ${userId} logged at ${timestamp}.`
-					);
-					resolve(); // Or return the inserted data ID if needed
-				}
+		stmt.run(position.x, position.y, position.z, userId, (err) => {
+			if (err) {
+				reject(err);
+			} else {
+				console.log(`[DB][${userId}] User position updated.`);
+				resolve();
 			}
-		);
+		});
 	});
 }
 
 module.exports = {
 	connectDB,
-	logUserMovement,
+	updateUserPosition,
 };

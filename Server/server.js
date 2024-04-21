@@ -64,16 +64,15 @@ db.connectDB()
 			socket.on("user-movement", (data) => {
 				users[socket.id].position = data.position;
 
-				// Log user movement to the database (assuming database.js provides logUserMovement)
-				db.logUserMovement(socket.id, data.position)
+				db.updateUserPosition(socket.id, data.position)
 					.then(() => {
 						console.log(
-							`[${socket.id}] User movement logged to database.`
+							`[${socket.id}] User position updated in database.`
 						);
 					})
 					.catch((err) => {
 						console.error(
-							`Error logging user movement: ${err.message}`
+							`Error updating user position: ${err.message}`
 						);
 					});
 
