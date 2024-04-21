@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // DOM Elements
 const canvas = document.getElementById("webgl-canvas");
@@ -15,6 +16,7 @@ const chatMenuButton = document.getElementById("chat-menu-button");
 const chatMenu = document.getElementById("chat-menu");
 const chatMenuDropDown = document.getElementById("chat-menu-dropdown");
 const settingsButton = document.getElementById("settings-button");
+const coordinatesOverlay = document.getElementById("coordinates-overlay");
 
 $(".chat-window").draggable({ handle: ".chat-title", scroll: false });
 setUsernameButton.addEventListener("click", () => {
@@ -71,7 +73,7 @@ setUsernameButton.addEventListener("click", () => {
 			// Scene, Camera, Renderer setup
 			const scene = new THREE.Scene();
 			const camera = new THREE.PerspectiveCamera(
-				75,
+				80,
 				window.innerWidth / window.innerHeight,
 				0.1,
 				1000
@@ -81,6 +83,8 @@ setUsernameButton.addEventListener("click", () => {
 				antialias: true,
 				canvas: document.getElementById("webgl-canvas"),
 			});
+
+			const controls = new OrbitControls(camera, renderer.domElement);
 
 			camera.position.z = 5;
 
@@ -92,12 +96,28 @@ setUsernameButton.addEventListener("click", () => {
 			const myCube = new THREE.Mesh(geometry, material);
 			scene.add(myCube);
 
+			controls.target.copy(myCube.position); // Set object as target for rotation
+			controls.enableDamping = true; // Enable smooth damping effect
+			controls.dampingFactor = 0.25; // Adjust damping factor
+
 			// Store user information
 			let myUserId;
 			let myPosition = { x: 0, y: 0, z: 0 };
 
 			// Dictionary to store other user's cubes and their positions
 			const otherUsers = {};
+
+			const desiredDistance = 5; // Adjust as needed
+
+			function constrainCameraDistance(camera, target, distance) {
+				const direction = new THREE.Vector3()
+					.subVectors(camera.position, target)
+					.normalize();
+				const newPosition = target
+					.clone()
+					.add(direction.multiplyScalar(distance));
+				camera.position.copy(newPosition);
+			}
 
 			// Function to create a cube mesh for another user
 			function createUserCube(userElement, position) {
@@ -198,6 +218,10 @@ setUsernameButton.addEventListener("click", () => {
 				}
 			});
 
+			function updateCoordinates() {
+				coordinatesOverlay.innerText = `(${myPosition.x}, ${myPosition.y}, ${myPosition.z})`;
+			}
+
 			// Update user position based on keyboard input
 			document.addEventListener("keydown", (event) => {
 				const speed = 1;
@@ -205,21 +229,27 @@ setUsernameButton.addEventListener("click", () => {
 					switch (event.key) {
 						case "w":
 							myPosition.z -= speed;
+							controls.target.z -= speed; // Move target left
 							break;
 						case "s":
 							myPosition.z += speed;
+							controls.target.z += speed; // Move target left
 							break;
 						case "a":
 							myPosition.x -= speed;
+							controls.target.x -= speed; // Move target left
 							break;
 						case "d":
 							myPosition.x += speed;
+							controls.target.x += speed; // Move target right
 							break;
 						case " ":
 							myPosition.y += speed;
+							controls.target.y += speed; // Move target up
 							break;
 						case "Shift":
 							myPosition.y -= speed;
+							controls.target.y -= speed; // Move target down
 							break;
 						case "Enter":
 							toggleChat();
@@ -310,7 +340,14 @@ setUsernameButton.addEventListener("click", () => {
 			// Animation loop
 			function animate() {
 				requestAnimationFrame(animate);
+				controls.update();
+				constrainCameraDistance(
+					camera,
+					controls.target,
+					desiredDistance
+				);
 
+				updateCoordinates();
 				renderer.render(scene, camera);
 			}
 

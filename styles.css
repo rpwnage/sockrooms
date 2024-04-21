@@ -2,7 +2,24 @@ body {
     background-color: black;
     height: 100%;
     overflow: hidden;
+    font-family: monospace;
     margin: 0 auto;
+}
+
+#login-modal {
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    margin-left: 40%;
+    margin-top: 30%;
+}
+
+#coordinates-overlay {
+    position: absolute;
+    right: 30px;
+    bottom: 10px;
+    font-family: inherit;
+    color: wheat;
 }
 
 .chat-window {
